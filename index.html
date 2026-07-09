@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!--
+  RAMBO OS v0.2 — しゅん（荒木俊介・ランボ社長）思考クローン統合システム
+  納品: 2026-05-20 当日デモ用
+  動作: claude.ai Artifacts / ローカルブラウザ / iPhone Safari 全対応
+  API: claude-sonnet-4-20250514, max_tokens=1000, 全モジュール try-catch JSON parse
+-->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#0a0807" />
+<title>RAMBO OS — しゅん思考クローン統合システム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,700;1,900&family=Noto+Serif+JP:wght@500;700;900&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          crimson:  { DEFAULT: '#DC143C', soft: 'rgba(220,20,60,0.15)', glow: 'rgba(220,20,60,0.4)' },
+          gold:     { DEFAULT: '#d4af37', soft: '#c9a961', deep: '#8b7340' },
+          cream:    { DEFAULT: '#f5f3ee', muted: 'rgba(245,243,238,0.6)' },
+          bark:     { 900: '#1a1410', 950: '#0a0807', 1000: '#050403' },
+        },
+        fontFamily: {
+          display:    ['"Playfair Display"', 'serif'],
+          body:       ['Manrope', 'sans-serif'],
+          'jp-serif': ['"Noto Serif JP"', 'serif'],
+        },
+      }
+    }
+  }
+</script>
+<style>
+  html, body {
+    background: radial-gradient(ellipse at top, #1a1410 0%, #0a0807 50%, #050403 100%);
+    color: #f5f3ee;
+    font-family: 'Manrope', sans-serif;
+    min-height: 100vh;
+    background-attachment: fixed;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+  }
+  .crimson-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, #DC143C 50%, transparent 100%);
+    box-shadow: 0 0 12px rgba(220,20,60,0.5);
+  }
+  .gold-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, #d4af37 50%, transparent 100%);
+  }
+  .card-luxury {
+    background: linear-gradient(135deg, rgba(26,20,16,0.75) 0%, rgba(10,8,7,0.55) 100%);
+    border: 1px solid rgba(212,175,55,0.15);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+  }
+  .card-luxury:hover {
+    transform: translateY(-4px);
+    border-color: rgba(212,175,55,0.5);
+    box-shadow: 0 8px 32px rgba(220,20,60,0.12), 0 0 24px rgba(212,175,55,0.08);
+  }
+  .card-pressed {
+    border-color: rgba(220,20,60,0.5) !important;
+    box-shadow: 0 0 24px rgba(220,20,60,0.25), inset 0 0 0 1px rgba(220,20,60,0.3) !important;
+  }
+  .glow-crimson { text-shadow: 0 0 24px rgba(220,20,60,0.4); }
+  .glow-gold    { text-shadow: 0 0 20px rgba(212,175,55,0.35); }
+  .anim-in { animation: fadeInUp .6s ease-out both; }
+  .anim-in-1 { animation-delay: .05s; }
+  .anim-in-2 { animation-delay: .12s; }
+  .anim-in-3 { animation-delay: .20s; }
+  .anim-in-4 { animation-delay: .28s; }
+  .anim-in-5 { animation-delay: .36s; }
+  .anim-in-6 { animation-delay: .44s; }
+  @keyframes fadeInUp { 0% { opacity:0; transform: translateY(20px) } 100% { opacity:1; transform: translateY(0) } }
+  .blink-dot { animation: blink 1.4s infinite; }
+  @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:.3 } }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0a0807; }
+  ::-webkit-scrollbar-thumb { background: #3a2a1a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #DC143C; }
+  .input {
+    width: 100%;
+    background: rgba(10,8,7,0.7);
+    border: 1px solid rgba(212,175,55,0.2);
+    border-radius: 0.5rem;
+    padding: 0.7rem 0.9rem;
+    color: #f5f3ee;
+    font-size: 16px;
+    font-family: 'Manrope', sans-serif;
+    transition: all .15s;
+  }
+  @media (min-width: 768px) { .input { font-size: 14px; } }
+  .input:focus {
+    outline: none;
+    border-color: #DC143C;
+    box-shadow: 0 0 0 3px rgba(220,20,60,0.12);
+  }
+  .input::placeholder { color: rgba(245,243,238,0.3); }
+  .btn-primary {
+    background: linear-gradient(135deg, #DC143C 0%, #8B0000 100%);
+    color: #f5f3ee;
+    border: 1px solid rgba(212,175,55,0.3);
+    box-shadow: 0 4px 16px rgba(220,20,60,0.3);
+    transition: all .2s;
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 6px 24px rgba(220,20,60,0.5);
+    transform: translateY(-1px);
+  }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-ghost {
+    background: transparent;
+    color: #d4af37;
+    border: 1px solid rgba(212,175,55,0.3);
+    transition: all .2s;
+  }
+  .btn-ghost:hover { background: rgba(212,175,55,0.1); border-color: #d4af37; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+    padding: 3px 8px; border-radius: 9999px; text-transform: uppercase;
+  }
+</style>
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<!-- Pin Babel に classic runtime が default のバージョン。
+     latest だと automatic runtime で import が挿入され、非moduleスクリプトで落ちる。 -->
+<script src="https://unpkg.com/@babel/standalone@7.22.10/babel.min.js"></script>
+<script>
+  // ===== 起動診断: なにも出ない時に「なぜ出ないか」を画面に表示する =====
+  window.__RAMBO_BOOT__ = { startedAt: Date.now(), reactSeen: false, mounted: false };
+  function showDiag(msg, color) {
+    var el = document.getElementById('rambo-diag');
+    if (!el) return;
+    el.innerHTML = '<div style="padding:24px 28px;border:1px solid '+(color||'#DC143C')+';border-radius:12px;background:rgba(220,20,60,0.08);color:#f5f3ee;font-family:ui-monospace,monospace;font-size:12px;line-height:1.6;max-width:680px;white-space:pre-wrap;word-break:break-word">' + msg + '</div>';
+  }
+  window.addEventListener('error', function (e) {
+    showDiag(
+      '[RAMBO OS 起動エラー]\n\n' +
+      'message: ' + (e.message || e.error || 'unknown') + '\n' +
+      'source : ' + (e.filename || '-') + ' :' + (e.lineno || '-') + ':' + (e.colno || '-') + '\n\n' +
+      '対処: ブラウザを強制リロード (Cmd+Shift+R / Ctrl+F5)。\n' +
+      'それでも出ない場合はこの画面をスクショして共有してください。'
+    );
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    showDiag('[Promise rejection] ' + (e.reason && e.reason.message || e.reason || 'unknown'));
+  });
+  setTimeout(function () {
+    if (window.__RAMBO_BOOT__.mounted) return;
+    var b = window.__RAMBO_BOOT__;
+    showDiag(
+      '[起動が完了しませんでした (8秒経過)]\n\n' +
+      'React 検出 : ' + (typeof React !== 'undefined' ? 'OK' : '失敗 — React CDN が読めていません') + '\n' +
+      'ReactDOM   : ' + (typeof ReactDOM !== 'undefined' ? 'OK' : '失敗 — ReactDOM CDN が読めていません') + '\n' +
+      'Babel      : ' + (typeof Babel !== 'undefined' ? 'OK' : '失敗 — Babel CDN が読めていません') + '\n' +
+      'Tailwind   : ' + (typeof tailwind !== 'undefined' ? 'OK' : '失敗 — Tailwind CDN が読めていません') + '\n' +
+      '経過時間   : ' + ((Date.now() - b.startedAt) / 1000).toFixed(1) + ' 秒\n\n' +
+      '対処: 一度 Ctrl+F5 で再読込。改善しない場合は別ブラウザでお試しください。',
+      '#d4af37'
+    );
+  }, 8000);
+</script>
+</head>
+<body>
+<div id="root">
+  <div id="rambo-diag" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a0807 0%,#1a1410 50%,#0a0807 100%);">
+    <div style="text-align:center;color:#d4af37;font-family:ui-monospace,monospace;letter-spacing:0.2em">
+      <div style="font-size:28px;font-weight:900;color:#DC143C;text-shadow:0 0 24px rgba(220,20,60,0.5)">RAMBO · OS</div>
+      <div style="font-size:11px;margin-top:14px;opacity:0.7">IGNITING SYSTEM…</div>
+      <div style="margin-top:24px"><div style="width:48px;height:48px;border:2px solid rgba(212,175,55,0.2);border-top-color:#DC143C;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto"></div></div>
+    </div>
+  </div>
+</div>
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+<script type="text/babel" data-presets="react">
+/** @jsx React.createElement */
+/** @jsxFrag React.Fragment */
+const { useState, useEffect, useRef, useMemo } = React;
+
+/* ──────────────────────── ICONS ──────────────────────── */
+const Icon = ({ name, className = 'w-5 h-5' }) => {
+  const paths = {
+    dashboard: <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>,
+    car:       <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>,
+    truck:     <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM19.5 9.5l1.96 2.5H17V9.5h2.5zM18 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>,
+    food:      <path d="M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.2-1.1-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/>,
+    flame:     <path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/>,
+    dumbbell:  <path d="M20.57 14.86 22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/>,
+    home:      <path d="M12 3 2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/>,
+    key:       <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>,
+    spark:     <path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/>,
+    bolt:      <path d="M7 2v11h3v9l7-12h-4l4-8H7z"/>,
+    chart:     <path d="M3 13h2v8H3v-8zm4-7h2v15H7V6zm4 4h2v11h-2V10zm4-7h2v18h-2V3zm4 10h2v8h-2v-8z"/>,
+    globe:     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>,
+    scan:      <path d="M19.8 18.4 14 12.6c1.5-1.8 1.4-4.5-.2-6.2-1.7-1.7-4.5-1.7-6.3 0-1.7 1.7-1.7 4.5 0 6.3 1.7 1.6 4.4 1.7 6.2.2l5.8 5.8 1.3-1.3zM7 9c0-1.7 1.3-3 3-3s3 1.3 3 3-1.3 3-3 3-3-1.3-3-3z"/>,
+    upload:    <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>,
+    check:     <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>,
+    arrow:     <path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/>,
+    arrowback: <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/>,
+    money:     <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>,
+    user:      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>,
+    close:     <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>,
+    target:    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-13c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>,
+    refresh:   <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>,
+    up:        <path d="M7 14l5-5 5 5z"/>,
+    down:      <path d="M7 10l5 5 5-5z"/>,
+    menu:      <path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/>,
+  };
+  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>{paths[name] || null}</svg>;
+};
+
+/* ──────────────────────── BRAND HEADER ──────────────────────── */
+const BrandHeader = () => (
+  <div className="flex items-center gap-3 select-none">
+    <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
+      <div className="absolute inset-0 bg-crimson rotate-45 rounded-sm shadow-[0_0_24px_rgba(220,20,60,0.4)]"/>
+      <div className="absolute inset-[2px] bg-bark-1000 rotate-45 rounded-sm"/>
+      <span className="relative font-display font-black italic text-gold text-xl">R</span>
+    </div>
+    <div className="leading-none">
+      <div className="font-display font-black tracking-[0.06em] text-xl text-cream">
+        RAMBO <span className="font-light italic text-gold">os</span>
+      </div>
+      <div className="text-[10px] text-cream-muted tracking-[0.25em] mt-1 font-body">
+        SHUN ARAKI · 6 BUSINESS UNITS
+      </div>
+    </div>
+  </div>
+);
+
+/* ──────────────────────── API KEY MODAL ──────────────────────── */
+const ApiKeyModal = ({ onSave }) => {
+  const [key, setKey] = useState('');
+  const [show, setShow] = useState(false);
+  const submit = () => {
+    if (!key.trim()) return;
+    localStorage.setItem('rambo_api_key', key.trim());
+    onSave(key.trim());
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bark-1000/95 backdrop-blur-md px-4">
+      <div className="card-luxury max-w-lg w-full rounded-2xl overflow-hidden anim-in">
+        <div className="crimson-line"/>
+        <div className="p-7 md:p-8">
+          <BrandHeader/>
+          <h2 className="mt-7 font-display text-3xl md:text-4xl text-cream tracking-tight leading-tight">
+            <span className="italic font-light text-gold">Ignition</span> Required
+          </h2>
+          <p className="mt-3 text-cream-muted text-sm leading-relaxed font-body">
+            Anthropic API キーを入力してください。<br/>
+            キーは <span className="text-gold">この端末（localStorage）</span> にのみ保存され、外部送信されません。
+          </p>
+          <div className="mt-6 relative">
+            <Icon name="key" className="w-5 h-5 text-gold absolute left-4 top-1/2 -translate-y-1/2"/>
+            <input
+              type={show ? 'text' : 'password'}
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && submit()}
+              placeholder="sk-ant-api03-..."
+              autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false"
+              className="w-full bg-bark-1000/80 border border-gold/20 focus:border-crimson focus:outline-none rounded-lg pl-12 pr-20 py-3.5 text-cream placeholder-cream-muted font-mono transition"
+              style={{ fontSize: '16px' }}
+            />
+            <button onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-cream-muted hover:text-gold px-2 py-1">
+              {show ? '隠す' : '表示'}
+            </button>
+          </div>
+          <button
+            onClick={submit}
+            disabled={!key.trim()}
+            className="mt-6 w-full btn-primary py-3.5 rounded-lg font-display tracking-[0.2em] text-base font-bold"
+          >
+            IGNITE
+          </button>
+          <p className="mt-3 text-[10px] text-cream-muted/70 font-body text-center">
+            キーは <code className="text-gold">console.anthropic.com</code> から発行できます
+          </p>
+        </div>
+        <div className="gold-line opacity-50"/>
+      </div>
+    </div>
+  );
+};
+
+/* ──────────────────────── TOP NAV ──────────────────────── */
+const NAV_ITEMS = [
+  { id: 'dashboard',  jp: 'ダッシュボード',     icon: 'dashboard', label: 'COMMAND' },
+  { id: 'clone',      jp: 'クローン俊',        icon: 'spark',     label: '思考クローン', hot: true },
+  { id: 'firstclass', jp: 'FIRSTCLASS',     icon: 'car',       label: '営業AI' },
+  { id: 'kizuna',     jp: '絆商会',           icon: 'truck',     label: '鉄の証券会社', hot: true },
+  { id: 'iroha',      jp: '旬鮮四季いろは',     icon: 'food',      label: '接待コーチ' },
+  { id: 'fucars',     jp: 'FUCARS',         icon: 'flame',     label: '体験設計' },
+  { id: 'kands',      jp: 'K&S',            icon: 'dumbbell',  label: '結果コミット' },
+  { id: 'kanto',      jp: '北関東総合企画',     icon: 'home',      label: '利回り計算' },
+];
+
+const TopNav = ({ current, setCurrent, apiKey, onLogout, mobileOpen, setMobileOpen }) => {
+  const click = (id) => { setCurrent(id); setMobileOpen(false); };
+  return (
+    <>
+      <header className="sticky top-0 z-30 bg-bark-1000/85 backdrop-blur-md border-b border-gold/10">
+        <div className="px-4 md:px-8 py-3 flex items-center justify-between gap-4">
+          <BrandHeader/>
+          <nav className="hidden lg:flex items-center gap-1">
+            {NAV_ITEMS.map((it) => {
+              const active = current === it.id;
+              return (
+                <button
+                  key={it.id}
+                  onClick={() => click(it.id)}
+                  className={`relative px-3 py-2 rounded-md font-body text-xs tracking-wider transition flex items-center gap-1.5
+                    ${active ? 'text-cream' : 'text-cream-muted hover:text-cream'}`}
+                >
+                  <Icon name={it.icon} className={`w-4 h-4 ${active ? 'text-crimson' : 'text-gold/60'}`}/>
+                  <span>{it.jp}</span>
+                  {it.hot && <span className="pill bg-crimson/20 text-crimson ml-1">目玉</span>}
+                  {active && <span className="absolute -bottom-3 left-0 right-0 h-0.5 bg-crimson shadow-[0_0_8px_rgba(220,20,60,0.6)]"/>}
+                </button>
+              );
+            })}
+          </nav>
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2 text-[10px] text-cream-muted font-body">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 blink-dot"/>
+              <span className="font-mono">{apiKey ? `${apiKey.slice(0,7)}...${apiKey.slice(-4)}` : '—'}</span>
+              <button onClick={onLogout} className="hover:text-crimson">×</button>
+            </div>
+            <button onClick={() => setMobileOpen(true)} className="lg:hidden text-cream p-1" aria-label="メニュー">
+              <Icon name="menu" className="w-6 h-6"/>
+            </button>
+          </div>
+        </div>
+        <div className="crimson-line opacity-50"/>
+      </header>
+
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 bg-bark-1000/95 backdrop-blur-md anim-in" onClick={() => setMobileOpen(false)}>
+          <div className="absolute top-0 right-0 h-full w-72 bg-bark-950 border-l border-gold/15 p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <BrandHeader/>
+              <button onClick={() => setMobileOpen(false)} className="text-cream-muted hover:text-crimson">
+                <Icon name="close" className="w-5 h-5"/>
+              </button>
+            </div>
+            <div className="space-y-1">
+              {NAV_ITEMS.map((it) => {
+                const active = current === it.id;
+                return (
+                  <button
+                    key={it.id}
+                    onClick={() => click(it.id)}
+                    className={`w-full text-left flex items-center gap-3 px-3 py-3 rounded-md transition
+                      ${active ? 'bg-crimson/10 text-cream border-l-2 border-crimson' : 'text-cream-muted hover:bg-bark-900 hover:text-cream'}`}
+                  >
+                    <Icon name={it.icon} className={`w-5 h-5 ${active ? 'text-crimson' : 'text-gold/60'}`}/>
+                    <div className="flex-1">
+                      <div className="font-body text-sm">{it.jp}</div>
+                      <div className="text-[10px] text-cream-muted">{it.label}</div>
+                    </div>
+                    {it.hot && <span className="pill bg-crimson/20 text-crimson">目玉</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-6 pt-4 border-t border-gold/10 text-[10px] text-cream-muted font-mono">
+              {apiKey ? `${apiKey.slice(0,12)}...${apiKey.slice(-4)}` : '—'}
+              <button onClick={onLogout} className="block mt-1 text-crimson">キー再入力 →</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+/* ──────────────────────── CLAUDE API HELPER ──────────────────────── */
+async function callClaude({ apiKey, systemPrompt, userPrompt, jsonOutput = true, maxTokens = 1000 }) {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: maxTokens,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`API ${res.status}: ${body.slice(0, 200)}`);
+    }
+    const data = await res.json();
+    const text = (data.content || []).map(b => b.text || '').join('');
+    if (!jsonOutput) return { ok: true, text };
+    const clean = text.replace(/```json|```/g, '').trim();
+    try {
+      return { ok: true, json: JSON.parse(clean), raw: text };
+    } catch (parseErr) {
+      return { ok: false, error: 'AI応答の解析に失敗しました。もう一度生成してください。', raw: text };
+    }
+  } catch (err) {
+    return { ok: false, error: err.message || String(err) };
+  }
+}
+
+const SYSTEM_BASE = `あなたはしゅん（荒木俊介、ランボ社長）の判断クローンAIです。群馬・北関東を拠点に6事業を経営する若手経営者として、即決即断・本質志向・物語型営業の哲学で回答してください。出力は必ずJSON形式のみ、コードフェンスや前置きは一切付けないでください。日本語で。`;
+
+/* ──────────────────────── DASHBOARD ──────────────────────── */
+const Dashboard = ({ setCurrent }) => {
+  const businesses = [
+    { id: 'firstclass', name: '株式会社FIRSTCLASS',  jp: '車両販売・整備・カスタム',     icon: 'car',      tag: '営業AI',     color: 'from-crimson/30 to-bark-950' },
+    { id: 'kizuna',     name: '絆商会株式会社',         jp: 'スクラップ・海外輸出入',       icon: 'truck',    tag: '鉄の証券会社', color: 'from-gold/30 to-bark-950', hot: true },
+    { id: 'iroha',      name: '旬鮮四季いろは',         jp: '和風居酒屋',                icon: 'food',     tag: '接待コーチ',   color: 'from-amber-700/30 to-bark-950' },
+    { id: 'fucars',     name: 'FUCARS',             jp: 'シーシャ&犬&高級車',          icon: 'flame',    tag: '体験設計',     color: 'from-rose-700/30 to-bark-950' },
+    { id: 'kands',      name: '株式会社K&S',          jp: 'ジム・ヨガ・オーダースーツ',    icon: 'dumbbell', tag: '結果コミット', color: 'from-emerald-700/30 to-bark-950' },
+    { id: 'kanto',      name: '北関東総合企画株式会社',  jp: '不動産',                   icon: 'home',     tag: '利回り計算',   color: 'from-indigo-700/30 to-bark-950' },
+  ];
+
+  return (
+    <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
+      <div className="anim-in">
+        <div className="text-cream-muted font-body tracking-[0.3em] text-[10px] md:text-xs">COMMAND CENTER · 統合ダッシュボード</div>
+        <h1 className="font-display text-4xl md:text-6xl text-cream tracking-tight mt-2 leading-[1.05]">
+          しゅんの<span className="italic font-light text-gold glow-gold">脳</span>を、<br className="md:hidden"/>
+          <span className="text-crimson glow-crimson">6事業</span>に配備する。
+        </h1>
+        <p className="text-cream-muted mt-3 font-jp-serif text-sm md:text-base max-w-2xl leading-relaxed">
+          AIで初めて、6つの会社が「1つの巨大な顧客資産プラットフォーム」になる。
+        </p>
+        <div className="crimson-line mt-6 mb-8"/>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
+        {businesses.map((b, i) => (
+          <button
+            key={b.id}
+            onClick={() => setCurrent(b.id)}
+            className={`card-luxury rounded-2xl p-5 md:p-6 text-left relative overflow-hidden anim-in anim-in-${i+1}`}
+          >
+            <div className={`absolute -right-12 -top-12 w-40 h-40 rounded-full bg-gradient-to-br ${b.color} blur-3xl opacity-60`}/>
+            {b.hot && (
+              <span className="absolute top-4 right-4 pill bg-crimson text-cream">★ 目玉</span>
+            )}
+            <div className="relative">
+              <Icon name={b.icon} className="w-8 h-8 text-gold mb-3"/>
+              <div className="font-jp-serif font-bold text-lg text-cream leading-tight">{b.name}</div>
+              <div className="text-xs text-cream-muted mt-1 font-body">{b.jp}</div>
+              <div className="mt-5 flex items-center justify-between">
+                <span className="pill bg-bark-900 text-gold border border-gold/20">{b.tag}</span>
+                <Icon name="arrow" className="w-4 h-4 text-cream-muted"/>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <SynergyMap setCurrent={setCurrent}/>
+
+      <ProofSection/>
+    </div>
+  );
+};
+
+/* ──────────────────────── SYNERGY MAP (SVG) ──────────────────────── */
+const SynergyMap = ({ setCurrent }) => {
+  const nodes = [
+    { id: 'firstclass', label: 'FIRSTCLASS',     sub: '車購入',          x: 90,   y: 60 },
+    { id: 'iroha',      label: 'いろは',           sub: '個室で接待',       x: 290,  y: 60 },
+    { id: 'fucars',     label: 'FUCARS',         sub: '撮影会で発信',     x: 490,  y: 60 },
+    { id: 'kands',      label: 'K&S',            sub: '体を仕上げる',     x: 690,  y: 60 },
+    { id: 'sns',        label: 'SNS投稿',          sub: 'しゅん口調自動生成', x: 890,  y: 60 },
+    { id: 'firstclass', label: '新規流入',         sub: '→ FIRSTCLASS',  x: 1090, y: 60, ghost: true },
+  ];
+  return (
+    <div className="card-luxury rounded-2xl p-5 md:p-8 mb-12 anim-in">
+      <div className="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <div className="text-cream-muted font-body tracking-[0.25em] text-[10px]">SYNERGY MAP</div>
+          <h2 className="font-display text-2xl md:text-3xl text-cream tracking-tight mt-1">
+            6事業を<span className="italic text-gold">1つの円</span>に閉じる。
+          </h2>
+          <p className="text-cream-muted text-sm font-jp-serif mt-1">
+            お客様が車を買うと、最後はSNSの新規流入になって戻ってくる。
+          </p>
+        </div>
+        <span className="pill bg-gold/15 text-gold border border-gold/30">CROSS-BIZ AI</span>
+      </div>
+
+      <div className="overflow-x-auto pb-2 -mx-2 px-2">
+        <svg viewBox="0 0 1200 130" className="w-[1200px] md:w-full h-32" style={{ minWidth: 1000 }}>
+          <defs>
+            <linearGradient id="line-grad" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="#DC143C" stopOpacity="0.2"/>
+              <stop offset="50%" stopColor="#d4af37" stopOpacity="0.8"/>
+              <stop offset="100%" stopColor="#DC143C" stopOpacity="0.2"/>
+            </linearGradient>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0,0 L10,5 L0,10 Z" fill="#d4af37"/>
+            </marker>
+          </defs>
+          {/* connecting line */}
+          {nodes.slice(0, -1).map((n, i) => {
+            const next = nodes[i+1];
+            return (
+              <line key={i} x1={n.x + 60} y1={n.y} x2={next.x - 10} y2={next.y}
+                stroke="url(#line-grad)" strokeWidth="1.5" markerEnd="url(#arr)"
+                strokeDasharray={next.ghost ? '4 4' : ''}/>
+            );
+          })}
+          {nodes.map((n, i) => (
+            <g key={i} onClick={() => !n.ghost && setCurrent(n.id)} style={{ cursor: n.ghost ? 'default' : 'pointer' }}>
+              <circle cx={n.x} cy={n.y} r="28" fill={n.ghost ? 'rgba(220,20,60,0.1)' : '#1a1410'} stroke={n.ghost ? '#DC143C' : '#d4af37'} strokeWidth="1.5" strokeDasharray={n.ghost ? '3 3' : ''}/>
+              <text x={n.x} y={n.y + 4} textAnchor="middle" className="fill-cream" fontSize="11" fontWeight="700" fontFamily="Manrope">{n.label}</text>
+              <text x={n.x} y={n.y + 50} textAnchor="middle" fill={n.ghost ? '#DC143C' : '#c9a961'} fontSize="10" fontFamily="Manrope">{n.sub}</text>
+            </g>
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+};
+
+/* ──────────────────────── PROOF SECTION ──────────────────────── */
+const ProofSection = () => (
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 anim-in">
+    {[
+      { num: '88%',     unit: '精度',    txt: 'EVERSTEEL社のAIスクラップ解析技術が東京製鉄宇都宮工場・朝日工業・トピー工業豊橋製造所で実証した認識精度。', src: 'MONOist / IT Leaders (2022.12)' },
+      { num: '7,200+', unit: '海外バイヤー', txt: 'JETRO Japan Street 登録の海外バイヤー数。約11,300社の日本企業と接続済み。', src: 'JETRO 公式 (2026.5時点)' },
+      { num: '月1.5-2万t', unit: '入札規模', txt: '関東鉄源協同組合の月次入札規模。応札権商社17社で構成。',   src: '日本鉄源協会 / リバー社' },
+    ].map((p, i) => (
+      <div key={i} className="card-luxury rounded-xl p-5">
+        <div className="font-display text-4xl text-gold glow-gold tracking-tight">{p.num}</div>
+        <div className="text-[10px] text-crimson font-body tracking-[0.2em] mt-1">{p.unit}</div>
+        <p className="text-xs text-cream-muted mt-3 leading-relaxed font-jp-serif">{p.txt}</p>
+        <div className="text-[10px] text-cream-muted/60 mt-3 font-mono">{p.src}</div>
+      </div>
+    ))}
+  </div>
+);
+
+/* ──────────────────────── MODULE 1: FIRSTCLASS — Sales AI ──────────────────────── */
+const FirstClassModule = ({ apiKey }) => {
+  const [customer, setCustomer] = useState({
+    name: '高崎 太郎', age: '42', job: '建設業 経営者', budget: '2500',
+    interest: 'ランボルギーニ ウルス',
+    history: '昨年ベンツGクラスをご購入。お子様2名・愛犬1匹。週末は群馬・栃木のゴルフ場通い。',
+    situation: '初回ご来店、まだ購入は半信半疑。ウルスの実車を見てテンション上がっている。',
+  });
+  const [out, setOut] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const generate = async () => {
+    if (!apiKey) { setErr('API キー未設定'); return; }
+    setLoading(true); setErr(''); setOut(null);
+    const system = SYSTEM_BASE + `
+あなたは特にFIRSTCLASS（高級車販売）の営業現場でしゅん本人として接客します。
+言葉づかい:「〜だよね」「マジで」「俺は」「お客さんの人生」を要所で使う群馬の社長口調。スペックではなく、お客様の人生のステージを上げる物語で語る。
+
+出力JSONフォーマット（このキーのみ、他のキーは禁止）:
+{
+  "opening": "最初の30秒で心を掴む一言",
+  "story": "商品が入った後のお客様の生活/家族/週末を具体的に描写する物語型営業トーク（3〜4文）",
+  "closing": "しゅんらしい男気のあるクロージング一言",
+  "crosssell": "他事業（いろは/FUCARS/K&S/北関東総合企画/絆商会）からのクロスセル提案を1つ。なければ空文字"
+}`;
+    const user = `【お客様】${customer.name}（${customer.age}歳・${customer.job}）
+【ご予算】${customer.budget}万円
+【ご興味】${customer.interest}
+【背景】${customer.history}
+【状況】${customer.situation}`;
+    const r = await callClaude({ apiKey, systemPrompt: system, userPrompt: user });
+    if (r.ok) setOut(r.json);
+    else setErr(r.error);
+    setLoading(false);
+  };
+
+  return (
+    <ModuleShell tag="MODULE 01 · 営業AI" title="FIRSTCLASS" sub="お客様の人生を上げる、物語型営業台本ジェネレーター">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-2 card-luxury rounded-2xl p-5 md:p-6">
+          <h3 className="font-display text-xl text-cream tracking-tight flex items-center gap-2">
+            <Icon name="user" className="w-5 h-5 text-crimson"/>お客様情報
+          </h3>
+          <div className="crimson-line my-4 opacity-50"/>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="氏名"><input className="input" value={customer.name} onChange={(e)=>setCustomer({...customer, name:e.target.value})}/></Field>
+              <Field label="年齢"><input className="input" value={customer.age} onChange={(e)=>setCustomer({...customer, age:e.target.value})}/></Field>
+            </div>
+            <Field label="職業"><input className="input" value={customer.job} onChange={(e)=>setCustomer({...customer, job:e.target.value})}/></Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="ご予算（万円）"><input className="input" value={customer.budget} onChange={(e)=>setCustomer({...customer, budget:e.target.value})}/></Field>
+              <Field label="ご興味"><input className="input" value={customer.interest} onChange={(e)=>setCustomer({...customer, interest:e.target.value})}/></Field>
+            </div>
+            <Field label="背景情報"><textarea rows="3" className="input" value={customer.history} onChange={(e)=>setCustomer({...customer, history:e.target.value})}/></Field>
+            <Field label="現在の状況"><textarea rows="3" className="input" value={customer.situation} onChange={(e)=>setCustomer({...customer, situation:e.target.value})}/></Field>
+          </div>
+          <button onClick={generate} disabled={loading} className="mt-5 w-full btn-primary py-3.5 rounded-lg font-display tracking-[0.15em] text-base font-bold flex items-center justify-center gap-2">
+            {loading ? <><span className="w-4 h-4 border-2 border-cream/30 border-t-cream rounded-full animate-spin"/>生成中...</> : <><Icon name="bolt" className="w-5 h-5"/>しゅん口調で生成</>}
+          </button>
+          {err && <div className="mt-3 text-xs text-crimson bg-crimson/10 border border-crimson/30 rounded p-2">{err}</div>}
+        </div>
+
+        <div className="lg:col-span-3 card-luxury rounded-2xl p-5 md:p-7 min-h-[500px]">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display text-xl text-cream tracking-tight flex items-center gap-2">
+              <Icon name="spark" className="w-5 h-5 text-gold"/>Shun-Voice Script
+            </h3>
+            {out && <span className="pill bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">JSON OK</span>}
+          </div>
+          <div className="gold-line opacity-40 mb-5"/>
+          {!out && !loading && !err && (
+            <div className="text-center py-20 text-cream-muted">
+              <div className="font-display text-2xl italic">Ready to ignite.</div>
+              <div className="text-sm mt-2 font-jp-serif">左フォームを埋めて生成ボタンを</div>
+            </div>
+          )}
+          {loading && <SkeletonLines count={6}/>}
+          {out && (
+            <div className="space-y-6">
+              <Section label="OPENING" jp="一言フック" text={out.opening}/>
+              <Section label="STORY"   jp="物語型営業トーク" text={out.story}/>
+              <Section label="CLOSING" jp="背中を押す一言" text={out.closing}/>
+              {out.crosssell && <Section label="CROSS-SELL" jp="他事業との接続" text={out.crosssell} accent/>}
+            </div>
+          )}
+        </div>
+      </div>
+    </ModuleShell>
+  );
+};
+
+/* ──────────────────────── MODULE 2: 絆商会 — Iron Securities ──────────────────────── */
+const KizunaModule = () => {
+  const [scanResult, setScanResult] = useState(null);
+  const [scanning, setScanning] = useState(false);
+
+  const runScan = () => {
+    setScanning(true);
+    setScanResult(null);
+    setTimeout(() => {
+      setScanResult({
+        grade: 'H2', weight: '2.3 t', impurity: 'モーター1個 (除去推奨)',
+        domestic: 97750, export: 117300, exportCountry: 'ベトナム向け',
+        confidence: 91,
+      });
+      setScanning(false);
+    }, 1800);
+  };
+
+  const lme = [
+    { name: '銅',     code: 'Cu',  price: '$9,420',  unit: '/t', delta: '+1.2%', up: true },
+    { name: 'アルミ', code: 'Al',  price: '$2,350',  unit: '/t', delta: '-0.3%', up: false },
+    { name: '亜鉛',   code: 'Zn',  price: '$2,810',  unit: '/t', delta: '+0.8%', up: true },
+    { name: 'ニッケル', code: 'Ni', price: '$16,200', unit: '/t', delta: '+2.4%', up: true },
+  ];
+  const domesticPrices = [
+    { region: '東京',   price: 48500 },
+    { region: '大阪',   price: 47800 },
+    { region: '名古屋', price: 48200 },
+  ];
+  const avg = Math.round(domesticPrices.reduce((s,d) => s + d.price, 0) / domesticPrices.length);
+
+  const buyers = [
+    { name: 'Vietnam Steel Holdings',    country: 'ベトナム',     item: 'H2 5,000t/月',     price: '¥117,300/t', status: 'open',     statusLabel: '連絡可' },
+    { name: 'Korea Iron & Steel Co.',    country: '韓国',         item: 'H2/HS 2,000t/月', price: '¥122,500/t', status: 'open',     statusLabel: '連絡可' },
+    { name: 'Bangladesh Re-Rolling',     country: 'バングラデシュ', item: 'H1 1,500t/月',     price: '¥108,000/t', status: 'progress', statusLabel: '商談中' },
+    { name: 'Taiwan Recycle Industries', country: '台湾',         item: 'モーター類',         price: '個別見積',     status: 'open',     statusLabel: '連絡可' },
+    { name: 'Thailand Metal Trade',      country: 'タイ',         item: '銅スクラップ',       price: '個別見積',     status: 'hold',     statusLabel: '保留' },
+  ];
+
+  return (
+    <ModuleShell tag="MODULE 02 · 鉄の証券会社" title="絆商会" sub="スクラップ業界の不透明性を破壊する、リアルタイム価値可視化システム" hot>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        {/* ─── PANEL A: Real-time Market ─── */}
+        <div className="card-luxury rounded-2xl p-5 md:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display text-xl text-cream tracking-tight flex items-center gap-2">
+              <Icon name="chart" className="w-5 h-5 text-gold"/>リアルタイム相場
+            </h3>
+            <span className="pill bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 blink-dot mr-1"/>LIVE
+            </span>
+          </div>
+          <div className="gold-line opacity-40 mb-4"/>
+
+          <div className="mb-5">
+            <div className="text-[10px] text-cream-muted tracking-widest mb-2 font-body">LME · 非鉄金属</div>
+            <div className="space-y-2">
+              {lme.map((m, i) => (
+                <div key={i} className="flex items-center justify-between p-2.5 rounded-md bg-bark-1000/60 border border-gold/10">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs text-gold w-6">{m.code}</span>
+                    <span className="font-jp-serif text-sm text-cream">{m.name}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-mono text-sm text-cream">{m.price}<span className="text-cream-muted text-[10px]">{m.unit}</span></div>
+                    <div className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${m.up ? 'text-emerald-400' : 'text-crimson'}`}>
+                      <Icon name={m.up ? 'up' : 'down'} className="w-3 h-3"/>{m.delta}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="text-[10px] text-cream-muted/70 mt-2 font-mono">London Metal Exchange リアルタイム連動</div>
+          </div>
+
+          <div className="mb-5">
+            <div className="text-[10px] text-cream-muted tracking-widest mb-2 font-body">国内電炉価格 · H2 中古鉄屑</div>
+            <div className="grid grid-cols-3 gap-2">
+              {domesticPrices.map((d) => (
+                <div key={d.region} className="p-2.5 rounded-md bg-bark-1000/60 border border-gold/10 text-center">
+                  <div className="text-[10px] text-cream-muted">{d.region}</div>
+                  <div className="font-mono text-sm text-cream mt-0.5">¥{d.price.toLocaleString()}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 p-3 rounded-md bg-crimson/10 border border-crimson/30 flex items-center justify-between">
+              <span className="text-xs text-cream font-jp-serif">3地区電炉メーカー購入価格平均</span>
+              <span className="font-display text-xl text-crimson glow-crimson">¥{avg.toLocaleString()}</span>
+            </div>
+            <div className="text-[10px] text-cream-muted/70 mt-2 font-mono">東京・大阪・名古屋3地区電炉メーカー購入価格平均</div>
+          </div>
+
+          <div>
+            <div className="text-[10px] text-cream-muted tracking-widest mb-2 font-body">日刊産業新聞 指標</div>
+            <div className="p-3 rounded-md bg-bark-1000/60 border border-gold/10 flex items-center justify-between">
+              <span className="text-xs text-cream font-jp-serif">日本鉄スクラップ総合価格</span>
+              <span className="font-mono text-base text-gold">¥47,950 <span className="text-cream-muted text-[10px]">/t</span></span>
+            </div>
+          </div>
+        </div>
+
+        {/* ─── PANEL B: AI Photo Scan ─── */}
+        <div className="card-luxury rounded-2xl p-5 md:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display text-xl text-cream tracking-tight flex items-center gap-2">
+              <Icon name="scan" className="w-5 h-5 text-gold"/>AI写真査定
+            </h3>
+            <span className="pill bg-gold/15 text-gold border border-gold/30">業界初 B2C</span>
+          </div>
+          <div className="gold-line opacity-40 mb-4"/>
+
+          <div className="p-4 rounded-lg bg-crimson/5 border-l-2 border-crimson mb-4">
+            <p className="text-xs text-cream font-jp-serif leading-relaxed">
+              東大発スタートアップ <span className="text-gold font-bold">EVERSTEEL</span> が<br/>
+              東京製鉄宇都宮工場・朝日工業・トピー工業豊橋製造所で<br/>
+              <span className="font-display text-3xl text-crimson glow-crimson italic">88%精度</span> を実証した<br/>
+              鉄スクラップAI解析技術。
+            </p>
+            <p className="text-[11px] text-gold mt-2 font-body">絆商会はこれを業界初の B2C（一般持ち込み客）向けに転用。</p>
+          </div>
+
+          <button onClick={runScan} disabled={scanning} className="w-full p-6 rounded-xl border-2 border-dashed border-gold/30 hover:border-gold hover:bg-gold/5 transition flex flex-col items-center gap-2">
+            {scanning ? (
+              <>
+                <span className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin"/>
+                <span className="text-xs text-cream font-body">解析中...</span>
+              </>
+            ) : (
+              <>
+                <Icon name="upload" className="w-8 h-8 text-gold"/>
+                <span className="text-sm text-cream font-jp-serif">スクラップ写真をアップロード</span>
+                <span className="text-[10px] text-cream-muted">タップでサンプル査定を実行</span>
+              </>
+            )}
+          </button>
+
+          {scanResult && (
+            <div className="mt-4 space-y-3 anim-in">
+              <div className="grid grid-cols-2 gap-2">
+                <KV label="等級判定"   value={scanResult.grade}/>
+                <KV label="推定重量"   value={scanResult.weight}/>
+              </div>
+              <KV label="異物検出" value={scanResult.impurity} alert/>
+              <div className="p-3 rounded-lg bg-bark-1000/70 border border-gold/15">
+                <div className="text-[10px] text-cream-muted tracking-widest mb-2 font-body">買取見込み</div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-cream font-jp-serif">国内</span>
+                  <span className="font-mono text-base text-cream">¥{scanResult.domestic.toLocaleString()}/t</span>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded bg-crimson/10 border border-crimson/30">
+                  <span className="text-xs text-cream font-jp-serif flex items-center gap-1">
+                    <Icon name="globe" className="w-3.5 h-3.5 text-crimson"/>海外輸出 · {scanResult.exportCountry}
+                  </span>
+                  <span className="font-mono text-base text-crimson font-bold">¥{scanResult.export.toLocaleString()}/t</span>
+                </div>
+                <div className="text-[10px] text-emerald-400 mt-2 text-right font-body">+20% (海外ルート優位)</div>
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-cream-muted font-body">
+                <span>解析信頼度</span>
+                <span className="text-gold">{scanResult.confidence}%</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ─── PANEL C: Overseas Buyer Match ─── */}
+        <div className="card-luxury rounded-2xl p-5 md:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display text-xl text-cream tracking-tight flex items-center gap-2">
+              <Icon name="globe" className="w-5 h-5 text-gold"/>海外バイヤーマッチング
+            </h3>
+            <span className="pill bg-gold/15 text-gold border border-gold/30">JETRO 連携</span>
+          </div>
+          <div className="gold-line opacity-40 mb-4"/>
+
+          <div className="p-4 rounded-lg bg-bark-1000/60 border border-gold/15 mb-4">
+            <p className="text-xs text-cream font-jp-serif leading-relaxed">
+              <span className="text-gold font-bold">JETRO Japan Street</span>（海外バイヤー <span className="font-display text-lg text-crimson">7,200人以上</span>、登録企業 <span className="font-display text-lg text-crimson">約11,300社</span>）と<br/>
+              自社海外取引網を統合。
+            </p>
+            <p className="text-[11px] text-cream-muted mt-2 font-body">
+              関東鉄源協同組合（応札権商社 <span className="text-gold">17社</span>、月 <span className="text-gold">1.5〜2万トン</span>）の月次入札情報も連携。
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            {buyers.map((b, i) => (
+              <div key={i} className="p-3 rounded-lg bg-bark-1000/60 border border-gold/10 hover:border-gold/30 transition">
+                <div className="flex items-start justify-between mb-1.5">
+                  <div className="min-w-0">
+                    <div className="font-jp-serif text-sm text-cream truncate">{b.name}</div>
+                    <div className="text-[10px] text-cream-muted">{b.country} · {b.item}</div>
+                  </div>
+                  <span className={`pill shrink-0 ${
+                    b.status === 'open'     ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' :
+                    b.status === 'progress' ? 'bg-gold/15 text-gold border border-gold/30' :
+                                              'bg-cream-muted/10 text-cream-muted border border-cream-muted/20'
+                  }`}>{b.statusLabel}</span>
+                </div>
+                <div className="font-mono text-sm text-gold">{b.price}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer source notes */}
+      <div className="mt-6 text-[10px] text-cream-muted/60 font-body leading-relaxed">
+        出典: EVERSTEELニュースリリース / MONOist 2022.12 / IT Leaders / JETRO公式 (2026.5時点) /
+        日刊産業新聞 / 一般社団法人日本鉄源協会 / リバー社ブログ / 神田重量金属
+      </div>
+    </ModuleShell>
+  );
+};
+
+/* ──────────────────────── MODULE 3: いろは — Settai Coach ──────────────────────── */
+const IrohaModule = ({ apiKey }) => {
+  const [form, setForm] = useState({
+    role: '役員', industry: '建設業', purpose: '契約締結', budget: '20万',
+  });
+  const [out, setOut] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const generate = async () => {
+    if (!apiKey) { setErr('API キー未設定'); return; }
+    setLoading(true); setErr(''); setOut(null);
+    const system = SYSTEM_BASE + `
+和風居酒屋「旬鮮四季いろは」での接待戦略を、相手の役職と業界から逆算して設計します。料理順序・席選び・話題のタイミング・退店時の決め台詞まで全て指定する。
+
+出力JSONフォーマット（このキーのみ、他は禁止）:
+{
+  "seat_strategy": "席選びと座らせ方の戦略（2〜3文）",
+  "menu_sequence": ["前菜（一品名）", "刺身（一品名）", "焼物（一品名）", "煮物・揚物（一品名）", "締め（一品名）"],
+  "talking_points": ["最初の30分の話題", "中盤の話題", "終盤の決定打"],
+  "closing_line": "退店時にしゅんが言う決め台詞",
+  "follow_up": "翌日のフォロー方針"
+}`;
+    const user = `【接待相手の役職】${form.role}
+【業界】${form.industry}
+【接待の目的】${form.purpose}
+【予算】${form.budget}`;
+    const r = await callClaude({ apiKey, systemPrompt: system, userPrompt: user });
+    if (r.ok) setOut(r.json); else setErr(r.error);
+    setLoading(false);
+  };
+
+  return (
+    <ModuleShell tag="MODULE 03 · 接待コーチ" title="旬鮮四季いろは" sub="役職・業界から逆算する、料理順序と話題設計">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-2 card-luxury rounded-2xl p-5 md:p-6">
+          <h3 className="font-display text-xl text-cream tracking-tight">接待設計</h3>
+          <div className="crimson-line my-4 opacity-50"/>
+          <div className="space-y-3">
+            <Field label="接待相手の役職">
+              <select className="input" value={form.role} onChange={(e)=>setForm({...form, role:e.target.value})}>
+                <option>役員</option><option>部長</option><option>課長</option><option>担当者</option>
+              </select>
+            </Field>
+            <Field label="業界"><input className="input" value={form.industry} onChange={(e)=>setForm({...form, industry:e.target.value})}/></Field>
+            <Field label="接待の目的">
+              <select className="input" value={form.purpose} onChange={(e)=>setForm({...form, purpose:e.target.value})}>
+                <option>新規開拓</option><option>契約締結</option><option>関係維持</option><option>お詫び</option>
+              </select>
+            </Field>
+            <Field label="予算">
+              <select className="input" value={form.budget} onChange={(e)=>setForm({...form, budget:e.target.value})}>
+                <option>5万</option><option>10万</option><option>20万</option><option>30万以上</option>
+              </select>
+            </Field>
+          </div>
+          <button onClick={generate} disabled={loading} className="mt-5 w-full btn-primary py-3.5 rounded-lg font-display tracking-[0.15em] font-bold flex items-center justify-center gap-2">
+            {loading ? <><span className="w-4 h-4 border-2 border-cream/30 border-t-cream rounded-full animate-spin"/>生成中...</> : <><Icon name="bolt" className="w-5 h-5"/>シナリオ生成</>}
+          </button>
+          {err && <div className="mt-3 text-xs text-crimson bg-crimson/10 border border-crimson/30 rounded p-2">{err}</div>}
+        </div>
+
+        <div className="lg:col-span-3 card-luxury rounded-2xl p-5 md:p-7 min-h-[500px]">
+          <h3 className="font-display text-xl text-cream tracking-tight flex items-center gap-2">
+            <Icon name="spark" className="w-5 h-5 text-gold"/>接待戦略
+          </h3>
+          <div className="gold-line opacity-40 my-4"/>
+          {!out && !loading && !err && <EmptyState message="左フォームを埋めて生成ボタンを"/>}
+          {loading && <SkeletonLines count={5}/>}
+          {out && (
+            <div className="space-y-6">
+              <Section label="SEAT" jp="席選び戦略" text={out.seat_strategy}/>
+              <div>
+                <div className="text-[10px] text-crimson font-body tracking-[0.2em] mb-2">MENU · 料理順序</div>
+                <div className="flex flex-wrap gap-2">
+                  {(out.menu_sequence || []).map((m, i) => (
+                    <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-bark-1000/70 border border-gold/20 rounded-full">
+                      <span className="text-[10px] text-gold font-mono">{String(i+1).padStart(2,'0')}</span>
+                      <span className="text-sm text-cream font-jp-serif">{m}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] text-crimson font-body tracking-[0.2em] mb-2">TALKING POINTS · 話題タイミング</div>
+                <div className="space-y-2">
+                  {(out.talking_points || []).map((tp, i) => (
+                    <div key={i} className="flex gap-3 p-3 bg-bark-1000/60 rounded-lg border border-gold/10">
+                      <span className="font-display text-2xl text-gold/60">{String(i+1).padStart(2,'0')}</span>
+                      <p className="text-sm text-cream font-jp-serif leading-relaxed flex-1">{tp}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <Section label="CLOSING"   jp="退店時の決め台詞"  text={out.closing_line} accent/>
+              <Section label="FOLLOW UP" jp="翌日のフォロー"   text={out.follow_up}/>
+            </div>
+          )}
+        </div>
+      </div>
+    </ModuleShell>
+  );
+};
+
+/* ──────────────────────── MODULE 4: FUCARS — Experience Designer ──────────────────────── */
+const FucarsModule = ({ apiKey }) => {
+  const SCENES = [
+    { id: 'date',     label: 'デート',           sub: '記念日・誕生日・告白', icon: 'flame' },
+    { id: 'influ',    label: 'インフルエンサー撮影会', sub: 'SNS狙い、エモい撮影', icon: 'spark' },
+    { id: 'corp',     label: '法人接待',          sub: '取引先・パートナー',  icon: 'user' },
+    { id: 'memorial', label: '個人記念',          sub: '自分へのご褒美',     icon: 'check' },
+  ];
+  const [scene, setScene] = useState('date');
+  const [out, setOut] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const generate = async () => {
+    if (!apiKey) { setErr('API キー未設定'); return; }
+    setLoading(true); setErr(''); setOut(null);
+    const sceneObj = SCENES.find(s => s.id === scene);
+    const system = SYSTEM_BASE + `
+FUCARS（伊勢崎のシーシャ&犬&高級車コンセプト店）での体験設計を行います。写真映え・SNSバズ・忘れられない体験の3点を必ず含める。
+
+出力JSONフォーマット:
+{
+  "photo_spots": ["スポット1（場所と撮り方）", "スポット2", "スポット3"],
+  "drink_order": ["1杯目（ドリンク名と理由）", "2杯目", "3杯目"],
+  "staging_flow": "犬と高級車を活用した演出フローを4〜5文で",
+  "sns_template": "Instagram/TikTok投稿テンプレート（しゅん口調、ハッシュタグ込み）"
+}`;
+    const user = `【シーン】${sceneObj.label}（${sceneObj.sub}）`;
+    const r = await callClaude({ apiKey, systemPrompt: system, userPrompt: user });
+    if (r.ok) setOut(r.json); else setErr(r.error);
+    setLoading(false);
+  };
+
+  return (
+    <ModuleShell tag="MODULE 04 · 体験設計" title="FUCARS" sub="犬と高級車とシーシャ、3つを掛け合わせた忘れられない体験">
+      <div className="card-luxury rounded-2xl p-5 md:p-6 mb-5">
+        <h3 className="font-display text-lg text-cream tracking-tight mb-4">シーン選択</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {SCENES.map(s => (
+            <button
+              key={s.id}
+              onClick={() => setScene(s.id)}
+              className={`p-4 rounded-xl border text-left transition ${scene === s.id ? 'border-crimson bg-crimson/10' : 'border-gold/15 hover:border-gold/40 bg-bark-1000/40'}`}
+            >
+              <Icon name={s.icon} className={`w-5 h-5 mb-2 ${scene === s.id ? 'text-crimson' : 'text-gold'}`}/>
+              <div className="font-jp-serif font-bold text-cream text-sm">{s.label}</div>
+              <div className="text-[10px] text-cream-muted mt-1">{s.sub}</div>
+            </button>
+          ))}
+        </div>
+        <button onClick={generate} disabled={loading} className="mt-5 btn-primary py-3 px-6 rounded-lg font-display tracking-[0.15em] font-bold inline-flex items-center gap-2">
+          {loading ? <><span className="w-4 h-4 border-2 border-cream/30 border-t-cream rounded-full animate-spin"/>生成中...</> : <><Icon name="bolt" className="w-5 h-5"/>体験プラン生成</>}
+        </button>
+        {err && <div className="mt-3 text-xs text-crimson bg-crimson/10 border border-crimson/30 rounded p-2 inline-block">{err}</div>}
+      </div>
+
+      {(out || loading) && (
+        <div className="card-luxury rounded-2xl p-5 md:p-7">
+          <h3 className="font-display text-xl text-cream tracking-tight flex items-center gap-2 mb-4">
+            <Icon name="spark" className="w-5 h-5 text-gold"/>体験プラン
+          </h3>
+          <div className="gold-line opacity-40 mb-5"/>
+          {loading && <SkeletonLines count={6}/>}
+          {out && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="text-[10px] text-crimson font-body tracking-[0.2em] mb-2">PHOTO SPOTS · 写真映えスポット</div>
+                <div className="space-y-2">
+                  {(out.photo_spots || []).map((p, i) => (
+                    <div key={i} className="flex gap-3 p-3 bg-bark-1000/60 rounded-lg border border-gold/10">
+                      <span className="font-display text-xl text-gold/60">{i+1}</span>
+                      <p className="text-sm text-cream font-jp-serif">{p}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] text-crimson font-body tracking-[0.2em] mb-2">DRINK ORDER · ドリンク順</div>
+                <div className="space-y-2">
+                  {(out.drink_order || []).map((d, i) => (
+                    <div key={i} className="flex gap-3 p-3 bg-bark-1000/60 rounded-lg border border-gold/10">
+                      <span className="font-display text-xl text-gold/60">{i+1}</span>
+                      <p className="text-sm text-cream font-jp-serif">{d}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <Section label="STAGING" jp="演出フロー（犬×高級車）" text={out.staging_flow}/>
+              </div>
+              <div className="md:col-span-2">
+                <Section label="SNS"     jp="投稿テンプレート"        text={out.sns_template} accent/>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </ModuleShell>
+  );
+};
+
+/* ──────────────────────── MODULE 5: K&S — Result Commit ──────────────────────── */
+const KandsModule = ({ apiKey }) => {
+  const [form, setForm] = useState({
+    height: '175', weight: '78', bodyFat: '22',
+    goal: '減量', goalValue: '8', period: '12',
+  });
+  const [out, setOut] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const generate = async () => {
+    if (!apiKey) { setErr('API キー未設定'); return; }
+    setLoading(true); setErr(''); setOut(null);
+    const system = SYSTEM_BASE + `
+K&S（パーソナルジム + ヨガ + オーダースーツ）で、結果コミット型の逆算プランを設計します。スーツの仕立て直しタイミングも含める。
+
+出力JSONフォーマット:
+{
+  "sessions_needed": "必要なジムセッション数と週次プラン（2〜3文）",
+  "meal_plan_summary": "食事プラン要点（3〜4文、具体的に）",
+  "suit_timing": "スーツオーダー・仕立て直しの最適タイミング提案",
+  "future_vision": "目標達成時の自分のビジュアル・気持ち・周囲の反応を物語的に描写（3〜4文）"
+}`;
+    const user = `【身長】${form.height}cm
+【体重】${form.weight}kg
+【体脂肪率】${form.bodyFat}%
+【目標】${form.goal} ${form.goalValue}${form.goal === 'スーツサイズ' ? '号' : 'kg'}
+【期間】${form.period}週間`;
+    const r = await callClaude({ apiKey, systemPrompt: system, userPrompt: user });
+    if (r.ok) setOut(r.json); else setErr(r.error);
+    setLoading(false);
+  };
+
+  return (
+    <ModuleShell tag="MODULE 05 · 結果コミット" title="K&S" sub="ジム × ヨガ × オーダースーツ、3軸で逆算する達成プラン">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-2 card-luxury rounded-2xl p-5 md:p-6">
+          <h3 className="font-display text-xl text-cream tracking-tight">体型診断</h3>
+          <div className="crimson-line my-4 opacity-50"/>
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              <Field label="身長(cm)"><input className="input" value={form.height} onChange={(e)=>setForm({...form, height:e.target.value})}/></Field>
+              <Field label="体重(kg)"><input className="input" value={form.weight} onChange={(e)=>setForm({...form, weight:e.target.value})}/></Field>
+              <Field label="体脂肪率(%)"><input className="input" value={form.bodyFat} onChange={(e)=>setForm({...form, bodyFat:e.target.value})}/></Field>
+            </div>
+            <Field label="目標">
+              <select className="input" value={form.goal} onChange={(e)=>setForm({...form, goal:e.target.value})}>
+                <option>減量</option><option>増量</option><option>スーツサイズ</option>
+              </select>
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label={`目標値 (${form.goal === 'スーツサイズ' ? '号' : 'kg'})`}><input className="input" value={form.goalValue} onChange={(e)=>setForm({...form, goalValue:e.target.value})}/></Field>
+              <Field label="期間(週)"><input className="input" value={form.period} onChange={(e)=>setForm({...form, period:e.target.value})}/></Field>
+            </div>
+          </div>
+          <button onClick={generate} disabled={loading} className="mt-5 w-full btn-primary py-3.5 rounded-lg font-display tracking-[0.15em] font-bold flex items-center justify-center gap-2">
+            {loading ? <><span className="w-4 h-4 border-2 border-cream/30 border-t-cream rounded-full animate-spin"/>生成中...</> : <><Icon name="target" className="w-5 h-5"/>逆算プラン生成</>}
+          </button>
+          {err && <div className="mt-3 text-xs text-crimson bg-crimson/10 border border-crimson/30 rounded p-2">{err}</div>}
+        </div>
+
+        <div className="lg:col-span-3 card-luxury rounded-2xl p-5 md:p-7 min-h-[500px]">
+          <h3 className="font-display text-xl text-cream tracking-tight flex items-center gap-2">
+            <Icon name="spark" className="w-5 h-5 text-gold"/>結果コミットプラン
+          </h3>
+          <div className="gold-line opacity-40 my-4"/>
+          {!out && !loading && !err && <EmptyState message="体型を入れて逆算プラン生成"/>}
+          {loading && <SkeletonLines count={5}/>}
+          {out && (
+            <div className="space-y-6">
+              <Section label="SESSIONS"  jp="ジムセッション計画"    text={out.sessions_needed}/>
+              <Section label="MEAL"      jp="食事プラン要点"       text={out.meal_plan_summary}/>
+              <Section label="SUIT"      jp="スーツオーダーの時期"  text={out.suit_timing} accent/>
+              <Section label="VISION"    jp="達成時のあなた"       text={out.future_vision}/>
+            </div>
+          )}
+        </div>
+      </div>
+    </ModuleShell>
+  );
+};
+
+/* ──────────────────────── MODULE 6: 北関東総合企画 — ROI Calculator ──────────────────────── */
+const KantoModule = () => {
+  const AREAS = {
+    '高崎':   { score: 7.8, note: '新幹線停車駅、商業密度高' },
+    '前橋':   { score: 7.2, note: '群馬県庁所在地、人口安定' },
+    '伊勢崎': { score: 6.5, note: '人口微増、住宅需要堅調' },
+    '太田':   { score: 7.0, note: 'SUBARU本社城下、工業安定' },
+    '桐生':   { score: 5.2, note: '人口減少傾向、要慎重判断' },
+  };
+
+  const [form, setForm] = useState({ price: '3800', rent: '18', area: '高崎', age: '15' });
+  const [result, setResult] = useState(null);
+
+  const calc = () => {
+    const price = parseFloat(form.price) * 10000;
+    const rent  = parseFloat(form.rent) * 10000;
+    const annualRent = rent * 12;
+    const expenseRatio = 0.20;
+    const grossYield  = (annualRent / price) * 100;
+    const netYield    = ((annualRent * (1 - expenseRatio)) / price) * 100;
+    const areaScore = AREAS[form.area].score;
+    const ageYears  = parseFloat(form.age);
+    const ageDecay  = Math.max(0, 1 - ageYears * 0.012);
+    const futureValue = price * Math.pow(1 + areaScore / 100, 10) * ageDecay;
+
+    setResult({
+      grossYield: grossYield.toFixed(2),
+      netYield:   netYield.toFixed(2),
+      areaScore:  areaScore,
+      areaNote:   AREAS[form.area].note,
+      futureValue: Math.round(futureValue),
+      verdict: netYield >= 7 ? { color: 'emerald-400', text: 'GO' }
+             : netYield >= 5 ? { color: 'gold',        text: 'CHECK' }
+             :                  { color: 'crimson',    text: 'STOP' },
+    });
+  };
+
+  return (
+    <ModuleShell tag="MODULE 06 · 利回り計算" title="北関東総合企画" sub="表面・実質利回りと10年後資産価値を即時可視化">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-2 card-luxury rounded-2xl p-5 md:p-6">
+          <h3 className="font-display text-xl text-cream tracking-tight">物件情報</h3>
+          <div className="crimson-line my-4 opacity-50"/>
+          <div className="space-y-3">
+            <Field label="物件価格（万円）"><input className="input" value={form.price} onChange={(e)=>setForm({...form, price:e.target.value})}/></Field>
+            <Field label="想定月家賃（万円）"><input className="input" value={form.rent} onChange={(e)=>setForm({...form, rent:e.target.value})}/></Field>
+            <Field label="エリア">
+              <select className="input" value={form.area} onChange={(e)=>setForm({...form, area:e.target.value})}>
+                {Object.keys(AREAS).map(a => <option key={a}>{a}</option>)}
+              </select>
+            </Field>
+            <Field label="築年数"><input className="input" value={form.age} onChange={(e)=>setForm({...form, age:e.target.value})}/></Field>
+          </div>
+          <button onClick={calc} className="mt-5 w-full btn-primary py-3.5 rounded-lg font-display tracking-[0.15em] font-bold flex items-center justify-center gap-2">
+            <Icon name="chart" className="w-5 h-5"/>計算実行
+          </button>
+        </div>
+
+        <div className="lg:col-span-3 card-luxury rounded-2xl p-5 md:p-7 min-h-[500px]">
+          <h3 className="font-display text-xl text-cream tracking-tight flex items-center gap-2">
+            <Icon name="money" className="w-5 h-5 text-gold"/>投資判定
+          </h3>
+          <div className="gold-line opacity-40 my-4"/>
+          {!result && <EmptyState message="物件情報を入れて計算実行"/>}
+          {result && (
+            <div className="space-y-5">
+              <div className={`p-5 rounded-2xl border-2 border-${result.verdict.color}/40 bg-${result.verdict.color}/5 text-center`}>
+                <div className="text-[10px] text-cream-muted tracking-[0.3em] font-body">VERDICT</div>
+                <div className={`font-display text-6xl text-${result.verdict.color} glow-${result.verdict.color === 'crimson' ? 'crimson' : 'gold'} mt-1`}>{result.verdict.text}</div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Metric label="表面利回り" value={`${result.grossYield}%`} hint="年間家賃 ÷ 物件価格"/>
+                <Metric label="実質利回り" value={`${result.netYield}%`}   hint="経費20%控除後"/>
+              </div>
+              <div className="p-4 rounded-xl bg-bark-1000/60 border border-gold/15">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-[10px] text-cream-muted tracking-[0.25em] font-body">AREA SCORE · {form.area}</div>
+                  <span className="font-display text-2xl text-gold">{result.areaScore}<span className="text-cream-muted text-sm"> /10</span></span>
+                </div>
+                <p className="text-xs text-cream font-jp-serif">{result.areaNote}</p>
+                <p className="text-[10px] text-cream-muted/70 mt-2 font-body">
+                  群馬県人口動態・新幹線アクセス・商業施設密度の3軸で算定
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-crimson/5 border border-crimson/30">
+                <div className="text-[10px] text-crimson tracking-[0.25em] font-body">10年後の資産価値予測</div>
+                <div className="font-display text-3xl text-cream mt-1">¥{result.futureValue.toLocaleString()}</div>
+                <div className="text-[10px] text-cream-muted/70 mt-1 font-body">
+                  エリアスコアと築年劣化率（年1.2%）から複利計算
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </ModuleShell>
+  );
+};
+
+/* ──────────────────────── MODULE 00: クローン俊 — Thinking Clone ──────────────────────── */
+const CLONE_SYSTEM = SYSTEM_BASE + `
+あなたは「クローン俊」— しゅん本人の思考クローンとして、考えに困った相談者に「ランボさんだったらこうやって乗り越えてきた」を即答します。
+
+## 判断哲学（絶対にブレない4本柱）
+1. 客に媚びず、価値を信じさせる（「すごいですね」等のお世辞は絶対に言わない）
+2. 値段じゃなく「選ばれる理由」を作る（価格競争に入った時点で負け）
+3. 本物志向・高級感・地方から世界へ（安価量産・コピー・妥協・地方完結は選択肢にない）
+4. 客の本音を3秒で見抜く（表面の要望ではなく裏の本音に向けて話す）
+
+## 意思決定の癖
+- 即決即断。6割確信で動いて走りながら直す。迷う時間が一番のコスト
+- 数字より「お客さんの人生」「社員の成長」を優先。規定外でも筋が通れば即決
+- 損して得取れ。目先の1万円より一生の客
+- どの判断も6事業（FIRSTCLASS/絆商会/いろは/FUCARS/K&S/北関東総合企画）のどこに繋がるかをセットで考える
+- 「これSNSで10万人に見られて恥ずかしくないか」でセルフチェック
+- 大事な局面は「俺が直接電話するわ」と自分で出る
+
+## 乗り越えの型
+①相談の裏の本音を一発で言い当てる → ②「俺も同じだった」と自分の経験に引きつける → ③選択肢を並べて悩まず筋の通る一手に絞る → ④24時間以内にやる最初の一歩に落とす → ⑤男気で背中を押す
+
+## 口調
+「〜だよね」「マジで」「俺は」を使う群馬の若手社長のフランクな口調。抽象論・きれいごと禁止、全部具体で。法務・税務など専門領域は「そこはプロに聞け。ただ俺なら〜」と言い切る。
+
+## 集客相談のとき（特に車=FIRSTCLASS）
+「お客さんを連れてきたい」系の相談には、精神論で終わらせず必ず実行プランまで落とす:
+- 誰を狙うか（既存客の紹介/SNSフォロワー10万人/6事業の他の客からのクロスセル、の3ルートから具体的に）
+- 何を発信・仕掛けるか（Instagram @shun8000 / TikTok @lambo_president に今日出せる投稿の実文案、DM・電話の実セリフ）
+- 数字の目標（何件仕掛けて何組来店、まで言い切る）
+一般論のマーケ用語（ペルソナ、ファネル等）は使わない。しゅんの実感覚の言葉で。
+
+## 回答の濃さ
+各セクションは薄い一言で逃げない。keiken と kotae は4〜6文でしっかり語る。ippo は「誰に・何を・いつまでに」が入った実行可能な指示にする。
+
+出力JSONフォーマット（このキーのみ、他のキーは禁止）:
+{
+  "honne": "相談の裏にある本音・恐れを一発で言い当てる一言",
+  "keiken": "『俺も○○のとき同じだった』— しゅん自身の経験に引きつけた話（4〜6文。覚えている本人の言葉があればそれを最優先で使う）",
+  "kotae": "ランボならこう乗り越える、という結論と実行プラン（4〜6文、迷いなし。集客なら誰を・何で・何件まで言い切る）",
+  "ippo": "24時間以内にやる最初の一歩（誰に・何を・いつまでに、が入った具体行動。SNS投稿なら実文案、電話なら実セリフを含める）",
+  "senaka": "男気で背中を押す締めの一言",
+  "toikake": "答えの精度をさらに上げるために一番効く質問1つ（不要なら空文字）"
+}`;
+
+const CLONE_MEMORY_KEY = 'rambo_clone_memory';
+
+const CloneShunModule = ({ apiKey }) => {
+  const [worry, setWorry] = useState('FIRSTCLASSに新しいお客さんを連れてきたい。今月あと3組は商談を作りたいが、何から手をつけるべきか。');
+  const [memory, setMemory] = useState(() => localStorage.getItem(CLONE_MEMORY_KEY) || '');
+  const [memDraft, setMemDraft] = useState('');
+  const [memOpen, setMemOpen] = useState(false);
+  const [out, setOut] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const saveMemory = () => {
+    if (!memDraft.trim()) return;
+    const next = (memory ? memory + '\n\n---\n\n' : '') + memDraft.trim();
+    localStorage.setItem(CLONE_MEMORY_KEY, next);
+    setMemory(next); setMemDraft('');
+  };
+  const clearMemory = () => {
+    if (!confirm('覚えさせた言葉を全部消します。いい?')) return;
+    localStorage.removeItem(CLONE_MEMORY_KEY);
+    setMemory('');
+  };
+
+  const generate = async () => {
+    if (!apiKey) { setErr('API キー未設定'); return; }
+    setLoading(true); setErr(''); setOut(null);
+    const memoryBlock = memory
+      ? `
+
+## しゅん本人が実際に語った言葉・経験（一次ソース・最優先で反映する）
+以下はしゅん本人が質問に答えた生の言葉。回答では必ずこの実体験・実際の言い回しに引きつけて語ること。一般論よりこちらを優先:
+${memory.slice(-8000)}`
+      : '';
+    const system = CLONE_SYSTEM + memoryBlock;
+    const r = await callClaude({ apiKey, systemPrompt: system, userPrompt: `【相談】${worry}`, maxTokens: 2500 });
+    if (r.ok) setOut(r.json);
+    else setErr(r.error);
+    setLoading(false);
+  };
+
+  return (
+    <ModuleShell tag="MODULE 00 · 思考クローン" title="クローン俊" sub="考えに困ったら、ここに投げる。『ランボさんならこう乗り越える』が3秒で返ってくる。教えた言葉は覚えて、次から全部の答えに効いてくる。" hot>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-2 space-y-5">
+          <div className="card-luxury rounded-2xl p-5 md:p-6">
+            <h3 className="font-display text-xl text-cream tracking-tight flex items-center gap-2">
+              <Icon name="target" className="w-5 h-5 text-crimson"/>問いかけ
+            </h3>
+            <div className="crimson-line my-4 opacity-50"/>
+            <Field label="聞きたいこと1個だけ、そのまま書く（例: 車のお客さんを連れてきたい）">
+              <textarea rows="6" className="input" value={worry} onChange={(e)=>setWorry(e.target.value)}/>
+            </Field>
+            <button onClick={generate} disabled={loading} className="mt-5 w-full btn-primary py-3.5 rounded-lg font-display tracking-[0.15em] text-base font-bold flex items-center justify-center gap-2">
+              {loading ? <><span className="w-4 h-4 border-2 border-cream/30 border-t-cream rounded-full animate-spin"/>思考中...</> : <><Icon name="spark" className="w-5 h-5"/>ランボならどうする?</>}
+            </button>
+            {err && <div className="mt-3 text-xs text-crimson bg-crimson/10 border border-crimson/30 rounded p-2">{err}</div>}
+          </div>
+
+          <div className="card-luxury rounded-2xl p-5 md:p-6">
+            <button onClick={()=>setMemOpen(!memOpen)} className="w-full flex items-center justify-between text-left">
+              <h3 className="font-display text-lg text-cream tracking-tight flex items-center gap-2">
+                <Icon name="upload" className="w-5 h-5 text-gold"/>俺の言葉を覚えさせる
+              </h3>
+              <span className="pill bg-gold/10 text-gold border border-gold/30">
+                {memory ? `記憶 ${memory.length}字` : '記憶なし'}
+              </span>
+            </button>
+            {memOpen && (
+              <div className="mt-4 space-y-3">
+                <div className="text-[11px] text-cream-muted leading-relaxed font-jp-serif">
+                  しゅん本人の答え・経験談・考え方をここに貼って保存すると、クローンが覚えて<span className="text-gold">次から全部の回答に反映</span>します。この端末のブラウザに保存（外部送信なし）。
+                </div>
+                <textarea rows="5" className="input" placeholder="例: 車を売るときは値引きの話を先にしない。俺は必ず『この車でどこ行きたい?』から聞く。〜" value={memDraft} onChange={(e)=>setMemDraft(e.target.value)}/>
+                <div className="flex gap-2">
+                  <button onClick={saveMemory} disabled={!memDraft.trim()} className="flex-1 btn-primary py-2.5 rounded-lg font-display tracking-wider text-sm font-bold flex items-center justify-center gap-2">
+                    <Icon name="check" className="w-4 h-4"/>覚えさせる
+                  </button>
+                  {memory && (
+                    <button onClick={clearMemory} className="px-4 py-2.5 rounded-lg border border-crimson/40 text-crimson text-sm hover:bg-crimson/10">
+                      全消去
+                    </button>
+                  )}
+                </div>
+                {memory && (
+                  <details className="text-[11px] text-cream-muted">
+                    <summary className="cursor-pointer text-gold">覚えている内容を見る</summary>
+                    <pre className="mt-2 whitespace-pre-wrap max-h-48 overflow-y-auto bg-black/30 rounded p-3 font-jp-serif">{memory}</pre>
+                  </details>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-3 card-luxury rounded-2xl p-5 md:p-7 min-h-[500px]">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display text-xl text-cream tracking-tight flex items-center gap-2">
+              <Icon name="spark" className="w-5 h-5 text-gold"/>Shun would say
+            </h3>
+            {out && <span className="pill bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">JSON OK</span>}
+          </div>
+          <div className="gold-line opacity-40 mb-5"/>
+          {!out && !loading && !err && (
+            <div className="text-center py-20 text-cream-muted">
+              <div className="font-display text-2xl italic">Bring me your problem.</div>
+              <div className="text-sm mt-2 font-jp-serif">迷ってる時間が一番もったいない。左に書いて投げな。</div>
+            </div>
+          )}
+          {loading && <SkeletonLines count={6}/>}
+          {out && (
+            <div className="space-y-6">
+              <Section label="HONNE"   jp="お前の本音はこれだろ" text={out.honne} accent/>
+              <Section label="KEIKEN"  jp="俺も同じだった" text={out.keiken}/>
+              <Section label="KOTAE"   jp="ランボならこう乗り越える" text={out.kotae}/>
+              <Section label="IPPO"    jp="24時間以内にやる一歩" text={out.ippo}/>
+              <Section label="SENAKA"  jp="背中を押す一言" text={out.senaka}/>
+              {out.toikake && <Section label="TOIKAKE" jp="逆にひとつ聞くけど" text={out.toikake} accent/>}
+            </div>
+          )}
+        </div>
+      </div>
+    </ModuleShell>
+  );
+};
+
+/* ──────────────────────── COMMON COMPONENTS ──────────────────────── */
+const ModuleShell = ({ tag, title, sub, children, hot }) => (
+  <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
+    <div className="anim-in mb-6 md:mb-8">
+      <div className="flex items-center gap-2 text-cream-muted font-body tracking-[0.3em] text-[10px] md:text-xs">
+        {tag}
+        {hot && <span className="pill bg-crimson text-cream">目玉</span>}
+      </div>
+      <h1 className="font-display text-4xl md:text-6xl text-cream tracking-tight mt-2 leading-[1.05]">
+        {title}
+      </h1>
+      <p className="text-cream-muted mt-2 font-jp-serif text-sm md:text-base max-w-2xl">{sub}</p>
+      <div className="crimson-line mt-5"/>
+    </div>
+    {children}
+  </div>
+);
+
+const Field = ({ label, children }) => (
+  <label className="block">
+    <div className="text-[11px] text-cream-muted tracking-wider mb-1.5 font-body">{label}</div>
+    {children}
+  </label>
+);
+
+const Section = ({ label, jp, text, accent }) => (
+  <div className={`${accent ? 'p-4 rounded-xl bg-crimson/5 border border-crimson/30' : ''}`}>
+    <div className="flex items-baseline gap-2 mb-1.5">
+      <span className="text-[10px] text-crimson font-body tracking-[0.2em]">{label}</span>
+      <span className="text-[10px] text-gold font-jp-serif">{jp}</span>
+    </div>
+    <p className="text-cream font-jp-serif text-[15px] leading-[1.85] whitespace-pre-wrap">{text}</p>
+  </div>
+);
+
+const SkeletonLines = ({ count = 5 }) => (
+  <div className="space-y-3 animate-pulse">
+    {Array.from({ length: count }).map((_, i) => (
+      <div key={i} className="h-3 bg-gold/10 rounded" style={{ width: `${55 + Math.random() * 40}%` }}/>
+    ))}
+  </div>
+);
+
+const EmptyState = ({ message }) => (
+  <div className="text-center py-16 text-cream-muted">
+    <div className="font-display text-xl italic">Ready.</div>
+    <div className="text-sm mt-2 font-jp-serif">{message}</div>
+  </div>
+);
+
+const KV = ({ label, value, alert }) => (
+  <div className="p-3 rounded-lg bg-bark-1000/60 border border-gold/10">
+    <div className="text-[10px] text-cream-muted tracking-widest font-body">{label}</div>
+    <div className={`mt-1 font-jp-serif text-sm ${alert ? 'text-crimson' : 'text-cream'}`}>{value}</div>
+  </div>
+);
+
+const Metric = ({ label, value, hint }) => (
+  <div className="p-4 rounded-xl bg-bark-1000/60 border border-gold/15">
+    <div className="text-[10px] text-cream-muted tracking-[0.25em] font-body">{label}</div>
+    <div className="font-display text-3xl text-gold mt-1">{value}</div>
+    <div className="text-[10px] text-cream-muted/70 mt-1 font-body">{hint}</div>
+  </div>
+);
+
+/* ──────────────────────── ROOT APP ──────────────────────── */
+const App = () => {
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('rambo_api_key') || '');
+  const [current, setCurrent] = useState('dashboard');
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (!apiKey) return <ApiKeyModal onSave={setApiKey}/>;
+
+  const renderModule = () => {
+    switch (current) {
+      case 'clone':      return <CloneShunModule apiKey={apiKey}/>;
+      case 'firstclass': return <FirstClassModule apiKey={apiKey}/>;
+      case 'kizuna':     return <KizunaModule/>;
+      case 'iroha':      return <IrohaModule apiKey={apiKey}/>;
+      case 'fucars':     return <FucarsModule apiKey={apiKey}/>;
+      case 'kands':      return <KandsModule apiKey={apiKey}/>;
+      case 'kanto':      return <KantoModule/>;
+      case 'dashboard':
+      default:           return <Dashboard setCurrent={setCurrent}/>;
+    }
+  };
+
+  return (
+    <>
+      <TopNav
+        current={current}
+        setCurrent={setCurrent}
+        apiKey={apiKey}
+        onLogout={() => { localStorage.removeItem('rambo_api_key'); setApiKey(''); }}
+        mobileOpen={mobileOpen}
+        setMobileOpen={setMobileOpen}
+      />
+      {renderModule()}
+      <footer className="mt-12 py-6 border-t border-gold/10 text-center">
+        <div className="text-[10px] text-cream-muted/60 font-body tracking-[0.25em]">
+          RAMBO OS v0.2 · SHUN ARAKI · 6 BUSINESS UNITS · 2026
+        </div>
+      </footer>
+    </>
+  );
+};
+
+try {
+  if (typeof window !== 'undefined') window.__RAMBO_BOOT__.reactSeen = true;
+  var __ramboRoot = document.getElementById('root');
+  // 起動診断ノードを除去して React にクリーンな root を渡す
+  __ramboRoot.innerHTML = '';
+  ReactDOM.createRoot(__ramboRoot).render(<App/>);
+  if (typeof window !== 'undefined') window.__RAMBO_BOOT__.mounted = true;
+} catch (err) {
+  var box = document.createElement('div');
+  box.style.cssText = 'position:fixed;inset:24px;padding:24px;border:1px solid #DC143C;border-radius:12px;background:rgba(220,20,60,0.08);color:#f5f3ee;font-family:ui-monospace,monospace;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow:auto;z-index:99999';
+  box.textContent = '[Mount error]\n' + (err && err.stack || err && err.message || err);
+  document.body.appendChild(box);
+  throw err;
+}
+</script>
+</body>
+</html>
